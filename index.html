@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Checklist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  /* ─── CSS Custom Properties ─── */
+  :root {
+    --bg: #FAF8F5;
+    --bg-card: #FFFFFF;
+    --bg-input: #F5F2EE;
+    --accent: #C45E3A;
+    --accent-soft: #F5E8E2;
+    --accent-hover: #A84E2E;
+    --text-primary: #2A2420;
+    --text-secondary: #7A6E68;
+    --text-muted: #B8AFA8;
+    --border: rgba(42,36,32,0.10);
+    --border-strong: rgba(42,36,32,0.18);
+    --shadow-card: 0 2px 12px rgba(42,36,32,0.07), 0 1px 3px rgba(42,36,32,0.05);
+    --shadow-hover: 0 6px 24px rgba(42,36,32,0.11), 0 2px 8px rgba(42,36,32,0.07);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --overdue-bg: #FEF0EC;
+    --overdue-border: rgba(196,94,58,0.25);
+    --done-opacity: 0.45;
+    --transition: 0.22s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* ─── Dark Theme ─── */
+  [data-theme="dark"] {
+    --bg: #1C1916;
+    --bg-card: #242019;
+    --bg-input: #2C2822;
+    --accent: #E07856;
+    --accent-soft: #3A2820;
+    --accent-hover: #C96840;
+    --text-primary: #F0EBE5;
+    --text-secondary: #A89890;
+    --text-muted: #6A5E58;
+    --border: rgba(240,235,229,0.09);
+    --border-strong: rgba(240,235,229,0.16);
+    --shadow-card: 0 2px 12px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2);
+    --shadow-hover: 0 6px 24px rgba(0,0,0,0.38), 0 2px 8px rgba(0,0,0,0.25);
+    --overdue-bg: rgba(196,94,58,0.12);
+    --overdue-border: rgba(196,94,58,0.3);
+  }
+
+  /* ─── Reset & Base ─── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  /* ─── Layout ─── */
+  .app {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 48px 20px 80px;
+  }
+
+  /* ─── Header ─── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 40px;
+  }
+
+  .header-left h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 38px;
+    font-weight: 300;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    color: var(--text-primary);
+  }
+
+  .header-left h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .header-left .date-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    letter-spacing: 0.02em;
+  }
+
+  .header-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding-top: 4px;
+  }
+
+  .icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+    font-size: 16px;
+  }
+
+  .icon-btn:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.05);
+  }
+
+  /* ─── Stats Bar ─── */
+  .stats-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .stat-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    transition: all var(--transition);
+  }
+
+  .stat-pill.active-stat {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* ─── Add Task Form ─── */
+  .add-form {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 20px 22px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-card);
+    transition: box-shadow var(--transition);
+  }
+
+  .add-form:focus-within {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .form-title {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .form-row:last-child { margin-bottom: 0; }
+
+  .task-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color var(--transition), background var(--transition);
+  }
+
+  .task-input::placeholder { color: var(--text-muted); }
+  .task-input:focus {
+    border-color: var(--accent);
+    background: var(--bg-card);
+  }
+
+  .time-input {
+    width: 130px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color var(--transition), background var(--transition);
+  }
+
+  .time-input:focus {
+    border-color: var(--accent);
+    background: var(--bg-card);
+  }
+
+  .add-btn {
+    padding: 10px 22px;
+    background: var(--accent);
+    color: #FFFFFF;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+  }
+
+  .add-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(196,94,58,0.3);
+  }
+
+  .add-btn:active { transform: translateY(0); }
+
+  /* ─── Toolbar ─── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .toolbar-left {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .sort-btn, .clear-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .sort-btn:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .sort-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .clear-btn:hover {
+    background: #FEF0EC;
+    color: #C45E3A;
+    border-color: rgba(196,94,58,0.3);
+  }
+
+  [data-theme="dark"] .clear-btn:hover {
+    background: rgba(196,94,58,0.15);
+    color: var(--accent);
+  }
+
+  /* ─── Task List ─── */
+  .task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state .empty-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+
+  .empty-state p {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    font-style: italic;
+    color: var(--text-muted);
+  }
+
+  /* ─── Task Card ─── */
+  .task-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow-card);
+    transition: all var(--transition);
+    cursor: grab;
+    position: relative;
+    animation: slideIn 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .task-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+    border-color: var(--border-strong);
+  }
+
+  .task-card.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+    transform: scale(0.98);
+  }
+
+  .task-card.drag-over {
+    border-color: var(--accent);
+    border-style: dashed;
+  }
+
+  /* Done state */
+  .task-card.done {
+    opacity: var(--done-opacity);
+  }
+
+  .task-card.done .task-name {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  /* Overdue state */
+  .task-card.overdue {
+    background: var(--overdue-bg);
+    border-color: var(--overdue-border);
+  }
+
+  .task-card.overdue .task-time {
+    color: var(--accent);
+  }
+
+  /* ─── Custom Checkbox ─── */
+  .checkbox-wrap {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .checkbox-wrap input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .checkbox-box {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border-strong);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+  }
+
+  .checkbox-wrap:hover .checkbox-box {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .checkbox-wrap input:checked + .checkbox-box {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .checkbox-box svg {
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.18s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .checkbox-wrap input:checked + .checkbox-box svg {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* ─── Task Content ─── */
+  .task-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-name {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+    transition: color var(--transition);
+  }
+
+  .task-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: color var(--transition);
+  }
+
+  .task-time svg { flex-shrink: 0; }
+
+  /* Overdue badge */
+  .overdue-badge {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: rgba(196,94,58,0.15);
+    color: var(--accent);
+    margin-left: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── Drag Handle ─── */
+  .drag-handle {
+    color: var(--border-strong);
+    cursor: grab;
+    padding: 2px 4px;
+    transition: color var(--transition);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .task-card:hover .drag-handle { color: var(--text-muted); }
+
+  /* ─── Delete Button ─── */
+  .delete-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+    flex-shrink: 0;
+    opacity: 0;
+  }
+
+  .task-card:hover .delete-btn {
+    opacity: 1;
+  }
+
+  .delete-btn:hover {
+    background: #FEF0EC;
+    color: var(--accent);
+  }
+
+  [data-theme="dark"] .delete-btn:hover {
+    background: rgba(196,94,58,0.18);
+    color: var(--accent);
+  }
+
+  /* ─── Progress Bar ─── */
+  .progress-wrap {
+    margin-bottom: 28px;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .progress-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .progress-pct {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    color: var(--accent);
+  }
+
+  .progress-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* ─── Notification Banner ─── */
+  .notif-bar {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    max-width: 300px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-hover);
+    z-index: 1000;
+    transform: translateX(340px);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .notif-bar.show { transform: translateX(0); }
+
+  .notif-bar .notif-title {
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .notif-bar .notif-body {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* ─── Tooltip ─── */
+  [title] { cursor: pointer; }
+
+  /* ─── Scrollbar ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 3px;
+  }
+
+  /* ─── Mobile ─── */
+  @media (max-width: 480px) {
+    .app { padding: 28px 16px 60px; }
+    .header-left h1 { font-size: 28px; }
+    .form-row { flex-direction: column; }
+    .time-input { width: 100%; }
+    .stats-bar { flex-wrap: wrap; }
+    .toolbar { flex-direction: column; align-items: flex-start; }
+    .task-card { padding: 13px 14px; }
+    .delete-btn { opacity: 1; }
+  }
+
+  /* ─── Entrance animation ─── */
+  .app { animation: fadeUp 0.4s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <h1>Daily <em>Checklist</em></h1>
+      <p class="date-label" id="dateLine"></p>
+    </div>
+    <div class="header-right">
+      <button class="icon-btn" id="notifBtn" title="Уведомления">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="themeBtn" title="Тёмная тема">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="themeIcon">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Progress -->
+  <div class="progress-wrap" id="progressWrap" style="display:none">
+    <div class="progress-header">
+      <span class="progress-label">Прогресс</span>
+      <span class="progress-pct" id="progressPct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-pill" id="statTotal">0 задач</div>
+    <div class="stat-pill" id="statDone">0 выполнено</div>
+    <div class="stat-pill" id="statOverdue">0 просрочено</div>
+  </div>
+
+  <!-- Add Form -->
+  <div class="add-form">
+    <div class="form-title">Новая задача</div>
+    <div class="form-row">
+      <input type="text" class="task-input" id="taskInput" placeholder="Название задачи…" maxlength="100" />
+      <input type="time" class="time-input" id="timeInput" />
+    </div>
+    <div class="form-row">
+      <button class="add-btn" id="addBtn" style="margin-left:auto">+ Добавить</button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar" id="toolbar" style="display:none">
+    <div class="toolbar-left">
+      <button class="sort-btn" id="sortTimeBtn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+        </svg>
+        По времени
+      </button>
+      <button class="sort-btn" id="sortNameBtn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polyline points="4 6 20 6"/><polyline points="4 12 14 12"/><polyline points="4 18 9 18"/>
+        </svg>
+        По имени
+      </button>
+    </div>
+    <button class="clear-btn" id="clearDoneBtn">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+      Очистить выполненные
+    </button>
+  </div>
+
+  <!-- Task List -->
+  <div class="task-list" id="taskList">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.4">
+          <rect x="3" y="4" width="18" height="18" rx="3" ry="3"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <p>Список задач пуст</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Notification Toast -->
+<div class="notif-bar" id="notifToast">
+  <div class="notif-title" id="notifTitle"></div>
+  <div class="notif-body" id="notifBody"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  Daily Checklist — Main Application Logic
+// ═══════════════════════════════════════════════════════
+
+// ─── State ───────────────────────────────────────────
+const STORAGE_KEY = 'dailyChecklist_v2';
+let tasks = [];          // Array of task objects
+let sortMode = null;     // 'time' | 'name' | null
+let dragSrcIndex = null; // Drag & drop source index
+let notifEnabled = false;
+let notifTimers = [];    // setTimeout IDs for task reminders
+
+// ─── Task Structure ───────────────────────────────────
+// { id, name, time, done, createdAt }
+
+// ─── Persistence ──────────────────────────────────────
+
+/** Load tasks from localStorage */
+function loadTasks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    // Filter out tasks older than 24 hours
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    return data.filter(t => t.createdAt > cutoff);
+  } catch (e) {
+    console.warn('Failed to parse tasks from localStorage', e);
+    return [];
+  }
+}
+
+/** Save tasks to localStorage */
+function saveTasks() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  } catch (e) {
+    console.warn('Failed to save tasks to localStorage', e);
+  }
+}
+
+// ─── Time Utilities ───────────────────────────────────
+
+/** Parse "HH:MM" string → minutes since midnight */
+function timeToMinutes(timeStr) {
+  if (!timeStr) return Infinity;
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+}
+
+/** Format "HH:MM" to "8:30" localized */
+function formatTime(timeStr) {
+  if (!timeStr) return '';
+  const [h, m] = timeStr.split(':').map(Number);
+  return `${h}:${m.toString().padStart(2, '0')}`;
+}
+
+/** Check if a task's time has passed today */
+function isOverdue(task) {
+  if (!task.time || task.done) return false;
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  return timeToMinutes(task.time) < nowMins;
+}
+
+/** Get today's date string in Russian */
+function getTodayLabel() {
+  return new Date().toLocaleDateString('ru-RU', {
+    weekday: 'long', day: 'numeric', month: 'long'
+  });
+}
+
+// ─── Rendering ────────────────────────────────────────
+
+/** Render the full task list */
+function renderTasks() {
+  const list = document.getElementById('taskList');
+  const emptyState = document.getElementById('emptyState');
+  const toolbar = document.getElementById('toolbar');
+  const progressWrap = document.getElementById('progressWrap');
+
+  // Get sorted copy
+  let display = [...tasks];
+  if (sortMode === 'time') {
+    display.sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
+  } else if (sortMode === 'name') {
+    display.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  }
+
+  // Clear old cards (keep empty state)
+  list.querySelectorAll('.task-card').forEach(el => el.remove());
+
+  if (tasks.length === 0) {
+    emptyState.style.display = 'block';
+    toolbar.style.display = 'none';
+    progressWrap.style.display = 'none';
+  } else {
+    emptyState.style.display = 'none';
+    toolbar.style.display = 'flex';
+    progressWrap.style.display = 'block';
+    display.forEach((task, i) => {
+      const card = buildCard(task, i);
+      list.appendChild(card);
+    });
+  }
+
+  updateStats();
+  updateProgress();
+}
+
+/** Build a single task card DOM element */
+function buildCard(task, displayIndex) {
+  const overdue = isOverdue(task);
+
+  const card = document.createElement('div');
+  card.className = 'task-card' +
+    (task.done ? ' done' : '') +
+    (overdue ? ' overdue' : '');
+  card.dataset.id = task.id;
+  card.draggable = true;
+
+  // Drag handle icon
+  card.innerHTML = `
+    <div class="drag-handle" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="9" cy="5" r="1.2" fill="currentColor" stroke="none"/>
+        <circle cx="15" cy="5" r="1.2" fill="currentColor" stroke="none"/>
+        <circle cx="9" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+        <circle cx="15" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+        <circle cx="9" cy="19" r="1.2" fill="currentColor" stroke="none"/>
+        <circle cx="15" cy="19" r="1.2" fill="currentColor" stroke="none"/>
+      </svg>
+    </div>
+
+    <label class="checkbox-wrap" aria-label="Выполнено">
+      <input type="checkbox" ${task.done ? 'checked' : ''} />
+      <div class="checkbox-box">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="2,6 5,9 10,3"/>
+        </svg>
+      </div>
+    </label>
+
+    <div class="task-content">
+      <div class="task-name">${escapeHtml(task.name)}</div>
+      ${task.time ? `
+        <div class="task-time">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          ${formatTime(task.time)}
+          ${overdue ? '<span class="overdue-badge">просрочено</span>' : ''}
+        </div>
+      ` : '<div class="task-time">без времени</div>'}
+    </div>
+
+    <button class="delete-btn" aria-label="Удалить задачу" title="Удалить">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  `;
+
+  // Checkbox toggle
+  const cb = card.querySelector('input[type="checkbox"]');
+  cb.addEventListener('change', () => toggleDone(task.id));
+
+  // Delete button
+  const del = card.querySelector('.delete-btn');
+  del.addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteTask(task.id);
+  });
+
+  // Drag & Drop events
+  card.addEventListener('dragstart', e => {
+    dragSrcIndex = tasks.findIndex(t => t.id === task.id);
+    setTimeout(() => card.classList.add('dragging'), 0);
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  card.addEventListener('dragend', () => {
+    card.classList.remove('dragging');
+    document.querySelectorAll('.task-card').forEach(c => c.classList.remove('drag-over'));
+  });
+  card.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    document.querySelectorAll('.task-card').forEach(c => c.classList.remove('drag-over'));
+    card.classList.add('drag-over');
+  });
+  card.addEventListener('drop', e => {
+    e.preventDefault();
+    const targetId = task.id;
+    const targetIndex = tasks.findIndex(t => t.id === targetId);
+    if (dragSrcIndex !== null && dragSrcIndex !== targetIndex) {
+      const [moved] = tasks.splice(dragSrcIndex, 1);
+      tasks.splice(targetIndex, 0, moved);
+      dragSrcIndex = null;
+      saveTasks();
+      renderTasks();
+    }
+  });
+
+  return card;
+}
+
+/** Safely escape HTML */
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/** Update stat pills */
+function updateStats() {
+  const total = tasks.length;
+  const done = tasks.filter(t => t.done).length;
+  const overdue = tasks.filter(t => isOverdue(t)).length;
+
+  document.getElementById('statTotal').textContent = `${total} ${plural(total,'задача','задачи','задач')}`;
+  document.getElementById('statDone').textContent = `${done} выполнено`;
+  document.getElementById('statOverdue').textContent = `${overdue} просрочено`;
+
+  document.getElementById('statDone').classList.toggle('active-stat', done > 0);
+  document.getElementById('statOverdue').classList.toggle('active-stat', overdue > 0);
+}
+
+/** Update progress bar */
+function updateProgress() {
+  if (tasks.length === 0) return;
+  const done = tasks.filter(t => t.done).length;
+  const pct = Math.round((done / tasks.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+}
+
+/** Russian plural helper */
+function plural(n, one, few, many) {
+  const abs = Math.abs(n) % 100;
+  const n1 = abs % 10;
+  if (abs > 10 && abs < 20) return `${n} ${many}`;
+  if (n1 > 1 && n1 < 5) return `${n} ${few}`;
+  if (n1 === 1) return `${n} ${one}`;
+  return `${n} ${many}`;
+}
+
+// ─── Task Operations ──────────────────────────────────
+
+/** Add a new task */
+function addTask() {
+  const nameEl = document.getElementById('taskInput');
+  const timeEl = document.getElementById('timeInput');
+  const name = nameEl.value.trim();
+
+  if (!name) {
+    // Shake animation feedback
+    nameEl.style.transition = 'transform 0.1s, border-color 0.2s';
+    nameEl.style.transform = 'translateX(5px)';
+    nameEl.style.borderColor = 'var(--accent)';
+    setTimeout(() => { nameEl.style.transform = ''; nameEl.style.borderColor = ''; }, 120);
+    nameEl.focus();
+    return;
+  }
+
+  const task = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+    name,
+    time: timeEl.value || '',
+    done: false,
+    createdAt: Date.now()
+  };
+
+  tasks.push(task);
+  saveTasks();
+  renderTasks();
+
+  nameEl.value = '';
+  timeEl.value = '';
+  nameEl.focus();
+
+  // Schedule notification if time is set
+  if (task.time && notifEnabled) scheduleNotif(task);
+}
+
+/** Toggle task completion */
+function toggleDone(id) {
+  const t = tasks.find(t => t.id === id);
+  if (t) {
+    t.done = !t.done;
+    saveTasks();
+    renderTasks();
+  }
+}
+
+/** Delete a task */
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  saveTasks();
+  renderTasks();
+}
+
+/** Clear all done tasks */
+function clearDone() {
+  const count = tasks.filter(t => t.done).length;
+  if (count === 0) return;
+  tasks = tasks.filter(t => !t.done);
+  saveTasks();
+  renderTasks();
+  showToast(`Удалено задач: ${count}`, 'Выполненные задачи очищены');
+}
+
+// ─── Sorting ──────────────────────────────────────────
+
+function setSort(mode) {
+  sortMode = sortMode === mode ? null : mode;
+  document.getElementById('sortTimeBtn').classList.toggle('active', sortMode === 'time');
+  document.getElementById('sortNameBtn').classList.toggle('active', sortMode === 'name');
+  renderTasks();
+}
+
+// ─── Theme ────────────────────────────────────────────
+
+function initTheme() {
+  const saved = localStorage.getItem('checklist_theme') || 'light';
+  applyTheme(saved);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.dataset.theme;
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem('checklist_theme', theme);
+
+  const iconEl = document.getElementById('themeIcon');
+  if (theme === 'dark') {
+    // Moon icon
+    iconEl.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+  } else {
+    // Sun icon
+    iconEl.innerHTML = `
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/>
+      <line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/>
+      <line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    `;
+  }
+}
+
+// ─── Notifications ────────────────────────────────────
+
+async function toggleNotifications() {
+  if (!('Notification' in window)) {
+    showToast('Уведомления недоступны', 'Браузер не поддерживает уведомления');
+    return;
+  }
+
+  if (!notifEnabled) {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      notifEnabled = true;
+      document.getElementById('notifBtn').style.color = 'var(--accent)';
+      showToast('Уведомления включены', 'Вы получите напоминания о задачах');
+      tasks.forEach(t => { if (t.time && !t.done) scheduleNotif(t); });
+    } else {
+      showToast('Разрешение отклонено', 'Разрешите уведомления в настройках браузера');
+    }
+  } else {
+    notifEnabled = false;
+    notifTimers.forEach(clearTimeout);
+    notifTimers = [];
+    document.getElementById('notifBtn').style.color = '';
+    showToast('Уведомления отключены', '');
+  }
+}
+
+/** Schedule a browser notification for a task */
+function scheduleNotif(task) {
+  if (!task.time || !notifEnabled) return;
+  const [h, m] = task.time.split(':').map(Number);
+  const now = new Date();
+  const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+  const delay = target.getTime() - now.getTime();
+
+  if (delay <= 0) return; // Already past
+
+  const timer = setTimeout(() => {
+    if (!task.done) {
+      new Notification('Daily Checklist', {
+        body: `Пора выполнить: ${task.name}`,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">✅</text></svg>'
+      });
+    }
+  }, delay);
+
+  notifTimers.push(timer);
+}
+
+// ─── Toast Notification (in-app) ─────────────────────
+
+let toastTimer = null;
+
+function showToast(title, body) {
+  const toast = document.getElementById('notifToast');
+  document.getElementById('notifTitle').textContent = title;
+  document.getElementById('notifBody').textContent = body;
+  toast.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ─── Overdue Refresh ──────────────────────────────────
+
+/** Re-render every minute to update overdue status */
+setInterval(() => {
+  if (tasks.length > 0) renderTasks();
+}, 60 * 1000);
+
+// ─── Event Listeners ──────────────────────────────────
+
+document.getElementById('addBtn').addEventListener('click', addTask);
+
+document.getElementById('taskInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTask();
+});
+
+document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+document.getElementById('notifBtn').addEventListener('click', toggleNotifications);
+
+document.getElementById('sortTimeBtn').addEventListener('click', () => setSort('time'));
+document.getElementById('sortNameBtn').addEventListener('click', () => setSort('name'));
+
+document.getElementById('clearDoneBtn').addEventListener('click', clearDone);
+
+// ─── Initialise ───────────────────────────────────────
+
+function init() {
+  document.getElementById('dateLine').textContent = getTodayLabel();
+  initTheme();
+  tasks = loadTasks();
+  saveTasks(); // Re-save to clean up old tasks
+  renderTasks();
+}
+
+init();
+</script>
+</body>
+</html>
